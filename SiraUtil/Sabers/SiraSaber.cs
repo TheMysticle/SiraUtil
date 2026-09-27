@@ -67,7 +67,10 @@ namespace SiraUtil.Sabers
 
             _saberTypeObject._saberType = saberType;
             Model = _saberModelProvider.NewModel(saberType);
-            Model.Init(transform, Saber, _saberModelContainerInitData.trailTintColor);
+            // SaberModelController.Init gained a required modelName parameter as of 1.45.1;
+            // passing the saber type name as a reasonable default (needs verification against
+            // real usage in-game -- unclear if this is used for anything beyond naming/logging).
+            Model.Init(transform, Saber, _saberModelContainerInitData.trailTintColor, saberType.ToString());
             _constructedThisFrame = true;
         }
 
