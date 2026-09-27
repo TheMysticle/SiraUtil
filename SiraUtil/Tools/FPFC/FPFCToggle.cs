@@ -27,15 +27,25 @@ namespace SiraUtil.Tools.FPFC
         private readonly IFPFCSettings _fpfcSettings;
         private readonly List<IFPFCListener> _fpfcListeners;
         private readonly IMenuControllerAccessor _menuControllerAccessor;
-        private readonly PauseController? _pauseController;
 
-        public FPFCToggle(MainCamera mainCamera, IFPFCSettings fpfcSettings, List<IFPFCListener> fpfcListeners, IMenuControllerAccessor menuControllerAccessor, [InjectOptional] PauseController? pauseController)
+        public FPFCToggle(MainCamera mainCamera, IFPFCSettings fpfcSettings, List<IFPFCListener> fpfcListeners, IMenuControllerAccessor menuControllerAccessor)
         {
             _mainCamera = mainCamera;
             _fpfcSettings = fpfcSettings;
             _fpfcListeners = fpfcListeners;
             _menuControllerAccessor = menuControllerAccessor;
-            _pauseController = pauseController;
+        }
+
+        // As of 1.45.1, PauseController.ignoreHMDUUnmountEvets is gone -- pausing on HMD
+        // unmount is now driven through HandleSystemStateChange(XRSystemEventType), so we
+        // suppress the HmdUnmounted case there directly while FPFC mode is active, instead
+        // of toggling a field PauseController no longer exposes. Needs in-headset
+        // verification that this doesn't also suppress other XR system events we still want.
+        [AffinityPrefix]
+        [AffinityPatch(typeof(PauseController), nameof(PauseController.HandleSystemStateChange))]
+        private bool SuppressHmdUnmountWhilePassthrough(XRSystemEventType __0)
+        {
+            return !(_fpfcSettings.Enabled && __0 == XRSystemEventType.HmdUnmounted);
         }
 
         [AffinityPatch(typeof(SettingsApplicatorSO), nameof(SettingsApplicatorSO.ApplyGraphicSettings))]
@@ -140,11 +150,6 @@ namespace SiraUtil.Tools.FPFC
             SetControllerEnabled(_menuControllerAccessor.LeftController, false);
             SetControllerEnabled(_menuControllerAccessor.RightController, false);
 
-            if (_pauseController != null)
-            {
-                _pauseController.ignoreHMDUUnmountEvets = true;
-            }
-
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
@@ -163,11 +168,6 @@ namespace SiraUtil.Tools.FPFC
 
             SetControllerEnabled(_menuControllerAccessor.LeftController, true);
             SetControllerEnabled(_menuControllerAccessor.RightController, true);
-
-            if (_pauseController != null)
-            {
-                _pauseController.ignoreHMDUUnmountEvets = false;
-            }
 
             if (!_fpfcSettings.LockViewOnDisable)
             {
