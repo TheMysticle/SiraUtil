@@ -19,7 +19,14 @@ namespace SiraUtil.Installers
             Container.BindInterfacesAndSelfTo<SaberModelProvider>().AsSingle();
             Container.BindInterfacesAndSelfTo<SaberModelManager>().AsSingle();
             Container.BindInterfacesTo<SaberClashEffectAdjuster>().AsSingle();
-            Container.BindInterfacesTo<SaberBurnMarkAreaLatch>().AsSingle();
+
+            // SaberBurnMarkAreaLatch is disabled as of the 1.45.1 port: SaberBurnMarkArea's
+            // burn-mark rendering was rewritten (render textures instead of LineRenderers --
+            // see SaberBurnMarkAreaPatch.cs for details), so this class's field-reflection
+            // based more-than-2-sabers support no longer has anything valid to touch and
+            // would throw at runtime. Native 2-saber burn marks still work unmodified.
+            // Container.BindInterfacesTo<SaberBurnMarkAreaLatch>().AsSingle();
+
             Container.Bind<SiraSaberFactory>().AsSingle();
         }
     }
