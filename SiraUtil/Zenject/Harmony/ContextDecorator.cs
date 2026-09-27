@@ -54,10 +54,27 @@ namespace SiraUtil.Zenject.Harmony
                 installerBindings.Add(installerPrefab.GetType());
             }
 
-            // AsyncSceneContext no longer exists in the Zenject version bundled as of 1.45.1
-            // (Beat Saber upgraded its bundled Zenject alongside the Unity engine bump), so
-            // there's no longer an async-installer set to fold in here. Needs verification
-            // that whatever replaced async scene loading doesn't need equivalent handling.
+            // AsyncSceneContext itself still exists as of 1.45.1 -- what changed is its internal
+            // structure: the old flat `_asyncInstallers` list is gone, replaced by `_registry`
+            // (an AsyncInstallerRegistry, populated by RunAsync() -> LoadInstallersAsync()
+            // before base.Run() -> InstallInstallers() runs, so it's always ready by the time
+            // this prefix fires). Without folding these in, ContextInstalling reports an
+            // installer set missing every async-loaded installer for this context, which made
+            // our own InstallFilter.ShouldInstall() checks act on incomplete information --
+            // confirmed as the cause of an intermittent Zenject injection failure
+            // (InvalidCastException inside ModestTree.Assert.IsEqual, deep in
+            // DiContainer.InjectExplicitInternal) that left several core gameplay systems
+            // (BeatmapObjectSpawnController, NoteCutSoundEffectManager, SaberClashEffect, etc.)
+            // uninjected for the rest of the session -- via an actual crash log from a real
+            // gameplay session on 1.45.1.
+            if (__instance is AsyncSceneContext asyncSceneContext && asyncSceneContext._registry != null)
+            {
+                foreach (IInstaller asyncInstaller in asyncSceneContext._registry.installers)
+                {
+                    installerBindings.Add(asyncInstaller.GetType());
+                }
+            }
+
             if (__instance is SceneDecoratorContext decorator)
             {
                 _recentlyInstalledDecorators.Add(decorator);
