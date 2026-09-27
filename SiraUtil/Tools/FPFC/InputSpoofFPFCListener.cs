@@ -25,12 +25,9 @@ namespace SiraUtil.Tools.FPFC
             return !_active;
         }
 
-        [AffinityPrefix]
-        [AffinityPatch(typeof(OculusVRHelper), nameof(IVRPlatformHelper.GetTriggerValue))]
-        protected bool GetOculusTriggerValueOverridePatch(ref float __result)
-        {
-            __result = _devicelessVRHelper.GetTriggerValue(default);
-            return !_active;
-        }
+        // OculusVRHelper was removed from the game as of 1.45.1 (Beat Saber consolidated
+        // all VR runtimes, Oculus included, onto UnityXRHelper/OpenXR), so the Oculus-specific
+        // patch that used to live here is no longer needed -- GetTriggerValueOverridePatch
+        // above now covers Oculus headsets too.
     }
 }

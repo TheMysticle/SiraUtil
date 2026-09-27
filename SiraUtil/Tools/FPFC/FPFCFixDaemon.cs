@@ -12,7 +12,9 @@ namespace SiraUtil.Tools.FPFC
             _fpfcSettings = fpfcSettings;
         }
 
-        [AffinityPatch(typeof(OculusVRHelper), nameof(OculusVRHelper.hasInputFocus), AffinityMethodType.Getter)]
+        // OculusVRHelper was removed from the game as of 1.45.1 (Beat Saber consolidated
+        // all VR runtimes, Oculus included, onto UnityXRHelper/OpenXR), so the Oculus-specific
+        // patch target below no longer exists and has been dropped.
         [AffinityPatch(typeof(UnityXRHelper), nameof(UnityXRHelper.hasInputFocus), AffinityMethodType.Getter)]
         protected void ForceInputFocus(ref bool __result)
         {
