@@ -54,14 +54,10 @@ namespace SiraUtil.Zenject.Harmony
                 installerBindings.Add(installerPrefab.GetType());
             }
 
-            if (__instance is AsyncSceneContext asyncSceneContext)
-            {
-                foreach (AsyncInstaller? asyncInstaller in asyncSceneContext._asyncInstallers)
-                {
-                    installerBindings.Add(asyncInstaller.GetType());
-                }
-            }
-
+            // AsyncSceneContext no longer exists in the Zenject version bundled as of 1.45.1
+            // (Beat Saber upgraded its bundled Zenject alongside the Unity engine bump), so
+            // there's no longer an async-installer set to fold in here. Needs verification
+            // that whatever replaced async scene loading doesn't need equivalent handling.
             if (__instance is SceneDecoratorContext decorator)
             {
                 _recentlyInstalledDecorators.Add(decorator);
